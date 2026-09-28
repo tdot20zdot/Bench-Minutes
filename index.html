@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bench Minutes</title>
+<meta name="theme-color" content="#18453B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Minutes">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{
+  --bg:#F1F4F2; --card:#FFFFFF; --ink:#0F2A23; --muted:#56675F; --line:#D3DDD8;
+  --green:#18453B; --green-ink:#FFFFFF; --green-soft:#DCE9E3;
+  --maple:#D8B47A; --maple-2:#CFA96C; --maple-edge:#B88F52;
+  --amber:#A86A10; --amber-soft:#FBEBCD; --red:#B3261E; --red-soft:#F8DAD7;
+  --sel:#1F6FD1; --sel-soft:#DDEAFB;
+  --display:"Avenir Next Condensed","Barlow Condensed","Arial Narrow","Roboto Condensed",Arial,sans-serif;
+  --body:-apple-system,"Avenir Next","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0D1916; --card:#15251F; --ink:#E6EFEB; --muted:#9BB0A7; --line:#2A3E36;
+    --green:#2E6E5C; --green-ink:#FFFFFF; --green-soft:#1D3A31;
+    --maple:#5A4426; --maple-2:#523D21; --maple-edge:#6E5330;
+    --amber:#F0B458; --amber-soft:#3D2E14; --red:#FF8A80; --red-soft:#3E1D1A;
+    --sel:#7DB3FF; --sel-soft:#1B2F4D;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0D1916; --card:#15251F; --ink:#E6EFEB; --muted:#9BB0A7; --line:#2A3E36;
+  --green:#2E6E5C; --green-ink:#FFFFFF; --green-soft:#1D3A31;
+  --maple:#5A4426; --maple-2:#523D21; --maple-edge:#6E5330;
+  --amber:#F0B458; --amber-soft:#3D2E14; --red:#FF8A80; --red-soft:#3E1D1A;
+  --sel:#7DB3FF; --sel-soft:#1B2F4D;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-tap-highlight-color:transparent}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:3px solid var(--sel);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:16px}
+.num{font-family:var(--display);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.muted{color:var(--muted)}
+
+/* ---------- Top bar ---------- */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0 12px;display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;border-bottom:1px solid var(--line)}
+.period{font-family:var(--display);font-weight:600;font-size:1.35rem;min-width:5.5ch}
+.clock{font-family:var(--display);font-weight:800;font-size:3.2rem;line-height:1;background:none;border:0;padding:0 4px;font-variant-numeric:tabular-nums;border-radius:6px}
+.clock.stopped{color:var(--muted)}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 14px;font-weight:600;min-height:44px}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--green);color:var(--green-ink);border-color:var(--green);min-width:110px;font-size:1.05rem}
+.btn.stop{background:var(--red);border-color:var(--red);color:#fff}
+.btn.small{padding:6px 10px;min-height:36px;font-size:.9rem}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.flash{background:var(--amber-soft);border-color:var(--amber);color:var(--ink)}
+.adj{display:flex;gap:6px}
+.spacer{flex:1}
+
+/* ---------- Floor ---------- */
+.floor{margin-top:16px;border-radius:14px;padding:14px;border:2px solid var(--maple-edge);
+  background:repeating-linear-gradient(90deg,var(--maple) 0 46px,var(--maple-2) 46px 48px)}
+.floor-head{display:flex;justify-content:space-between;align-items:baseline;margin:0 2px 10px;font-family:var(--display);font-weight:700;font-size:1.15rem;color:#2B1E0C}
+:root[data-theme="dark"] .floor-head{color:#F2E3C8}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .floor-head{color:#F2E3C8}}
+.tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.tile{position:relative;text-align:left;background:var(--card);border:2px solid transparent;border-radius:12px;padding:12px 12px 16px;overflow:hidden;min-height:150px;display:flex;flex-direction:column;gap:2px;transition:transform .12s ease,border-color .12s ease}
+.tile .jn{font-family:var(--display);font-weight:800;font-size:1.6rem;line-height:1;color:var(--green)}
+:root[data-theme="dark"] .tile .jn{color:#8FD0B5}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .tile .jn{color:#8FD0B5}}
+.tile .nm{font-weight:600;font-size:1rem;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tile .st{font-family:var(--display);font-weight:800;font-size:3rem;line-height:1;margin-top:auto;font-variant-numeric:tabular-nums}
+.tile .tot{font-size:.9rem;color:var(--muted)}
+.tile .tot b{font-family:var(--display);font-size:1.05rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.tile .meter{position:absolute;left:0;bottom:0;height:6px;background:var(--green);width:0}
+.tile.warn .st{color:var(--amber)} .tile.warn .meter{background:var(--amber)}
+.tile.long{background:var(--red-soft)} .tile.long .st{color:var(--red)} .tile.long .meter{background:var(--red)}
+.tile.sel{border-color:var(--sel);box-shadow:0 0 0 3px var(--sel-soft);transform:translateY(-2px)}
+.tile .tag{position:absolute;top:10px;right:10px;font-size:.75rem;font-weight:700;color:var(--sel)}
+
+.hint{margin:14px 2px 8px;min-height:1.4em;font-weight:500}
+.hint.on{color:var(--sel)}
+
+/* ---------- Bench ---------- */
+.bench{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.chip{text-align:left;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:9px 11px;display:grid;grid-template-columns:auto 1fr;column-gap:8px;row-gap:1px;align-items:baseline;min-height:56px}
+.chip .jn{font-family:var(--display);font-weight:700;font-size:1.3rem;grid-row:span 2;color:var(--green)}
+:root[data-theme="dark"] .chip .jn{color:#8FD0B5}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .chip .jn{color:#8FD0B5}}
+.chip .nm{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.chip .sub{font-size:.85rem;color:var(--muted)}
+.chip .sub b{font-family:var(--display);font-weight:600;color:var(--ink);font-size:.98rem;font-variant-numeric:tabular-nums}
+.chip.sel{border-color:var(--sel);box-shadow:0 0 0 3px var(--sel-soft)}
+.bench.target .chip:not(.sel){border-style:dashed;border-color:var(--sel)}
+.tiles.target .tile:not(.sel){border-color:var(--sel);border-style:dashed}
+
+/* ---------- Lower panels ---------- */
+.lower{display:grid;grid-template-columns:3fr 2fr;gap:16px;margin-top:22px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px}
+.panel h2{font-family:var(--display);font-weight:700;font-size:1.35rem;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:.95rem}
+th,td{padding:8px 6px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-weight:600;color:var(--muted);font-size:.85rem}
+th:nth-child(1),td:nth-child(1),th:nth-child(2),td:nth-child(2){text-align:left}
+td.n{font-family:var(--display);font-size:1.08rem;font-variant-numeric:tabular-nums}
+td.big{font-weight:700;font-size:1.2rem}
+tr.oc td:nth-child(2){font-weight:700}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:6px;vertical-align:middle}
+:root[data-theme="dark"] .dot{background:#8FD0B5}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .dot{background:#8FD0B5}}
+.log{list-style:none;margin:0;padding:0;max-height:420px;overflow:auto}
+.log li{padding:8px 0;border-bottom:1px solid var(--line);font-size:.93rem;display:flex;gap:10px;align-items:flex-start}
+.log .when{font-family:var(--display);font-weight:600;min-width:7.5ch;color:var(--muted);font-variant-numeric:tabular-nums}
+.log .in{color:var(--green);font-weight:600}
+:root[data-theme="dark"] .log .in{color:#8FD0B5}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .log .in{color:#8FD0B5}}
+.log .out{color:var(--muted)}
+.empty{color:var(--muted);font-size:.95rem;padding:6px 0}
+.namebtn{background:none;border:0;padding:4px 0;text-align:left;font-weight:inherit;display:inline-flex;align-items:center;gap:0;min-height:32px}
+.namebtn .pen{margin-left:8px;font-size:.78rem;font-weight:600;color:var(--sel);opacity:0;transition:opacity .12s}
+.namebtn:hover .pen,.namebtn:focus-visible .pen{opacity:1}
+@media (hover:none){.namebtn .pen{opacity:.8}}
+.namebtn:hover{text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:3px}
+.log .edit{color:var(--amber);font-weight:600}
+.teamchk{margin:10px 0 0;font-size:.92rem;color:var(--muted)}
+.teamchk b{font-family:var(--display);font-size:1.05rem;color:var(--ink);font-variant-numeric:tabular-nums}
+.teamchk.bad{color:var(--red);font-weight:600}
+
+/* ---------- Setup ---------- */
+.setup h1{font-family:var(--display);font-weight:800;font-size:2.6rem;margin:8px 0 4px;line-height:1}
+.setup p.lead{margin:0 0 18px;color:var(--muted);max-width:60ch}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+label.f{display:block;font-weight:600;margin:0 0 6px}
+textarea,input[type=text],input[type=number],select{width:100%;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:10px 12px}
+textarea{min-height:260px;resize:vertical;line-height:1.5;font-family:var(--body)}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row > div{flex:1;min-width:130px}
+.starters{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.starters .chip{min-height:48px}
+.starters .chip.on{background:var(--green-soft);border-color:var(--green)}
+.count{font-family:var(--display);font-weight:700;font-size:1.1rem}
+
+/* ---------- Dialog ---------- */
+dialog{border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);padding:18px;width:min(460px,92vw)}
+dialog::backdrop{background:rgba(0,0,0,.45)}
+dialog h3{font-family:var(--display);font-weight:700;font-size:1.5rem;margin:0 0 10px}
+dialog .acts{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.menu{display:flex;flex-direction:column;gap:8px}
+.menu .btn{text-align:left}
+.clockin{font-family:var(--display);font-size:2.4rem;text-align:center;font-weight:700}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+
+@media (max-width:900px){
+  .tiles{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .lower{grid-template-columns:1fr}
+}
+@media (max-width:560px){
+  .wrap{padding:10px}
+  .clock{font-size:2.6rem}
+  .tiles{grid-template-columns:1fr}
+  .tile{min-height:0;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:10px 12px 14px}
+  .tile .jn{grid-row:span 2}
+  .tile .st{grid-row:span 2;grid-column:3;margin:0;font-size:2.4rem}
+  .tile .tag{display:none}
+  .grid2{grid-template-columns:1fr}
+  textarea{min-height:180px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<dialog id="dlg"></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+const KEY = 'bench-minutes-tracker-v1';
+const FORMATS = {
+  ncaam:{label:'2 halves of 20 min (NCAA men)', n:2, len:1200, ot:300, halves:true},
+  q10:  {label:'4 quarters of 10 min (NCAA women, FIBA)', n:4, len:600, ot:300},
+  nba:  {label:'4 quarters of 12 min (NBA)', n:4, len:720, ot:300},
+  hs:   {label:'4 quarters of 8 min (high school)', n:4, len:480, ot:240}
+};
+const SAMPLE = "1 Player One\n2 Player Two\n3 Player Three\n4 Player Four\n5 Player Five\n10 Player Six\n11 Player Seven\n12 Player Eight\n14 Player Nine\n15 Player Ten\n20 Player Eleven\n22 Player Twelve\n24 Player Thirteen";
+
+function fresh(){
+  return {phase:'setup', format:'ncaam', warn:240, long:360, rosterText:'', roster:[], starters:[],
+    onCourt:[], players:{}, base:0, running:false, startedAt:0, period:1, periodStart:0, log:[], sort:'roster'};
+}
+let S = load();
+let sel = null;           // {id, side:'court'|'bench'}
+let wakeLock = null;
+
+function load(){
+  try{ const raw = localStorage.getItem(KEY); if(raw){ return Object.assign(fresh(), JSON.parse(raw)); } }catch(e){}
+  return fresh();
+}
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+
+/* ---------- time helpers ---------- */
+const fmt = FORMATS;
+function F(){ return fmt[S.format] || fmt.ncaam; }
+function ge(){ return S.base + (S.running ? (Date.now() - S.startedAt)/1000 : 0); }
+function plen(p){ return p <= F().n ? F().len : F().ot; }
+function remaining(){ return Math.max(0, plen(S.period) - (ge() - S.periodStart)); }
+function mmss(sec, ceil){
+  sec = Math.max(0, sec);
+  const s = ceil ? Math.ceil(sec - 1e-6) : Math.floor(sec + 1e-6);
+  return Math.floor(s/60) + ':' + String(s % 60).padStart(2,'0');
+}
+function clockStr(){
+  const r = remaining();
+  if (r < 60 && r > 0) return (Math.floor(r*10)/10).toFixed(1);
+  return mmss(r, true);
+}
+function periodLabel(p){
+  const f = F();
+  if (p <= f.n){
+    if (f.halves) return p === 1 ? '1st half' : '2nd half';
+    return ['1st','2nd','3rd','4th'][p-1] + ' qtr';
+  }
+  const o = p - f.n; return o === 1 ? 'OT' : o + 'OT';
+}
+function shortPeriod(p){
+  const f = F();
+  if (p <= f.n) return (f.halves ? 'H' : 'Q') + p;
+  const o = p - f.n; return o === 1 ? 'OT' : o + 'OT';
+}
+
+/* ---------- roster ---------- */
+function parseRoster(text){
+  const out = [], seen = new Set();
+  text.split(/\r?\n/).forEach(line => {
+    line = line.trim(); if(!line) return;
+    const m = line.match(/^#?\s*(\d{1,2})\s*[-.,:)]?\s+(.+)$/);
+    let num = '', name = line;
+    if (m){ num = m[1]; name = m[2].trim(); }
+    let id = (num + '|' + name).toLowerCase().replace(/\s+/g,' ');
+    if (seen.has(id)) return; seen.add(id);
+    out.push({id, num, name});
+  });
+  return out;
+}
+function P(id){ return S.roster.find(r => r.id === id) || {num:'', name:'?'}; }
+function rec(id){
+  if(!S.players[id]) S.players[id] = {total:0, stintStart:null, stints:0, longest:0, lastOut:null};
+  return S.players[id];
+}
+function onCourt(id){ return S.onCourt.includes(id); }
+function curStint(id, g){ if(!onCourt(id)) return 0; const r = rec(id); return Math.max(0, g - r.stintStart); }
+function totalOf(id, g){ return rec(id).total + curStint(id, g); }
+function label(id){ const p = P(id); return (p.num ? '#' + p.num + ' ' : '') + p.name; }
+
+/* ---------- actions ---------- */
+function startClock(){
+  if (remaining() <= 0) return;
+  S.running = true; S.startedAt = Date.now(); save(); render(); keepAwake(true);
+}
+function stopClock(){
+  S.base = ge(); S.running = false; save(); render(); keepAwake(false);
+}
+function toggleClock(){ S.running ? stopClock() : startClock(); }
+
+function setElapsed(newGe){
+  const lo = S.periodStart, hi = S.periodStart + plen(S.period);
+  newGe = Math.min(hi, Math.max(lo, newGe));
+  S.base = newGe; if (S.running) S.startedAt = Date.now();
+  S.onCourt.forEach(id => { const r = rec(id); if (r.stintStart > newGe) r.stintStart = newGe; });
+  save(); render();
+}
+function adjust(clockDelta){ setElapsed(ge() - clockDelta); }
+
+function nextPeriod(){
+  if (S.running) stopClock();
+  S.base = ge();
+  // Close out every stint on the floor so the new period starts fresh (breaks count as rest)
+  S.onCourt.forEach(id => {
+    const r = rec(id), st = Math.max(0, S.base - r.stintStart);
+    if (st > 0){ r.total += st; r.stints += 1; r.longest = Math.max(r.longest, st); }
+    r.stintStart = S.base;
+  });
+  S.period += 1; S.periodStart = S.base;
+  S.log.unshift({kind:'period', g:S.base, period:S.period});
+  save(); render(); toast(periodLabel(S.period) + ' ready');
+}
+
+function doSub(outId, inId){
+  const g = ge();
+  const prev = {onCourt:S.onCourt.slice(), out:JSON.parse(JSON.stringify(rec(outId))), inn:JSON.parse(JSON.stringify(rec(inId)))};
+  const ro = rec(outId), ri = rec(inId);
+  const stint = Math.max(0, g - ro.stintStart);
+  ro.total += stint; ro.stints += 1; ro.longest = Math.max(ro.longest, stint);
+  ro.lastOut = g; ro.stintStart = null;
+  ri.stintStart = g;
+  S.onCourt[S.onCourt.indexOf(outId)] = inId;
+  S.log.unshift({kind:'sub', g, period:S.period, clock:clockStr(), out:outId, inn:inId, outStint:stint, prev});
+  save(); render();
+  toast('In ' + label(inId) + ' · Out ' + label(outId));
+}
+function undoLast(){
+  const e = S.log[0]; if(!e) return;
+  if (e.kind === 'sub'){
+    S.onCourt = e.prev.onCourt; S.players[e.out] = e.prev.out; S.players[e.inn] = e.prev.inn;
+    S.log.shift(); save(); render(); toast('Sub undone');
+  } else if (e.kind === 'edit'){
+    S.players[e.id] = JSON.parse(JSON.stringify(e.prev));
+    S.log.shift(); save(); render(); toast('Correction undone');
+  }
+}
+function parseClock(v){
+  v = String(v).trim();
+  const m = v.match(/^(\d{1,3}):(\d{1,2}(?:\.\d)?)$/);
+  if (m && +m[2] < 60) return +m[1]*60 + +m[2];
+  if (/^\d+(\.\d+)?$/.test(v)) return Math.round(parseFloat(v) * 60); // plain number = minutes
+  return null;
+}
+function applyCorrection(id, newTotal, newStint){
+  const g = ge(), r = rec(id);
+  const before = totalOf(id, g);
+  const prev = JSON.parse(JSON.stringify(r));
+  if (onCourt(id)){
+    r.stintStart = g - newStint;
+    r.total = Math.max(0, newTotal - newStint);
+  } else {
+    r.total = newTotal;
+  }
+  r.longest = Math.min(r.longest, r.total);
+  S.log.unshift({kind:'edit', g, period:S.period, clock:clockStr(), id, from:before, to:newTotal, prev});
+  save(); render(); toast(label(id) + ' set to ' + mmss(newTotal));
+}
+function tap(id, side){
+  if (!sel){ sel = {id, side}; }
+  else if (sel.id === id){ sel = null; }
+  else if (sel.side === side){ sel = {id, side}; }
+  else {
+    const outId = side === 'court' ? id : sel.id;
+    const inId = side === 'bench' ? id : sel.id;
+    sel = null; doSub(outId, inId); return;
+  }
+  render();
+}
+
+function startGame(){
+  S.roster = parseRoster(S.rosterText);
+  S.starters = S.starters.filter(id => S.roster.some(r => r.id === id));
+  if (S.starters.length !== 5) return;
+  S.players = {}; S.roster.forEach(r => rec(r.id));
+  S.onCourt = S.starters.slice();
+  S.onCourt.forEach(id => { rec(id).stintStart = 0; });
+  S.base = 0; S.running = false; S.period = 1; S.periodStart = 0; S.log = [];
+  S.phase = 'game'; sel = null; save(); render();
+}
+
+async function keepAwake(on){
+  try{
+    if (on && 'wakeLock' in navigator && !wakeLock){ wakeLock = await navigator.wakeLock.request('screen'); wakeLock.addEventListener('release', () => { wakeLock = null; }); }
+    if (!on && wakeLock){ await wakeLock.release(); wakeLock = null; }
+  }catch(e){}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && S.running) keepAwake(true); });
+
+/* ---------- rendering ---------- */
+const app = document.getElementById('app');
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+function render(){ S.phase === 'setup' ? renderSetup() : renderGame(); tick(); }
+
+function renderSetup(){
+  const roster = parseRoster(S.rosterText);
+  S.starters = S.starters.filter(id => roster.some(r => r.id === id));
+  const n = S.starters.length;
+  app.innerHTML = `
+  <div class="setup">
+    <h1>Bench minutes</h1>
+    <p class="lead">Enter your roster, tap five starters, then start the game. Minutes run on game-clock time, so they only count while the clock is running.</p>
+    <div class="grid2">
+      <div class="panel">
+        <label class="f" for="rt">Roster, one player per line with number first</label>
+        <textarea id="rt" placeholder="${esc(SAMPLE)}">${esc(S.rosterText)}</textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="btn small" id="sample">Fill with placeholder roster</button>
+        </div>
+      </div>
+      <div class="panel">
+        <h2><span>Starting five</span><span class="count">${n} of 5</span></h2>
+        <div class="starters" id="st">
+          ${roster.length ? roster.map(r => `<button class="chip ${S.starters.includes(r.id)?'on':''}" data-id="${esc(r.id)}" aria-pressed="${S.starters.includes(r.id)}">
+              <span class="jn">${esc(r.num)}</span><span class="nm">${esc(r.name)}</span></button>`).join('')
+            : '<div class="empty">Players show up here as you type the roster.</div>'}
+        </div>
+        <div class="row" style="margin-top:16px">
+          <div><label class="f" for="fm">Game format</label>
+            <select id="fm">${Object.entries(FORMATS).map(([k,v]) => `<option value="${k}" ${S.format===k?'selected':''}>${v.label}</option>`).join('')}</select></div>
+        </div>
+        <div class="row" style="margin-top:12px">
+          <div><label class="f" for="w">Stint warning (min)</label><input id="w" type="number" min="1" step="0.5" value="${S.warn/60}"></div>
+          <div><label class="f" for="l">Long stint (min)</label><input id="l" type="number" min="1" step="0.5" value="${S.long/60}"></div>
+        </div>
+        <div style="margin-top:18px"><button class="btn primary" id="go" ${n===5?'':'disabled'}>Start game</button></div>
+      </div>
+    </div>
+  </div>`;
+  const rt = document.getElementById('rt');
+  rt.addEventListener('input', () => {
+    S.rosterText = rt.value; save();
+    const pos = rt.selectionStart; renderSetup();
+    const t = document.getElementById('rt'); t.focus(); t.setSelectionRange(pos,pos);
+  });
+  document.getElementById('sample').onclick = () => { S.rosterText = SAMPLE; save(); renderSetup(); };
+  document.querySelectorAll('#st .chip').forEach(b => b.onclick = () => {
+    const id = b.dataset.id;
+    if (S.starters.includes(id)) S.starters = S.starters.filter(x => x !== id);
+    else if (S.starters.length < 5) S.starters.push(id);
+    save(); renderSetup();
+  });
+  document.getElementById('fm').onchange = e => { S.format = e.target.value; save(); };
+  document.getElementById('w').onchange = e => { const v = parseFloat(e.target.value); if (v > 0){ S.warn = Math.round(v*60); save(); } };
+  document.getElementById('l').onchange = e => { const v = parseFloat(e.target.value); if (v > 0){ S.long = Math.round(v*60); save(); } };
+  document.getElementById('go').onclick = startGame;
+}
+
+function renderGame(){
+  const g = ge();
+  const bench = S.roster.filter(r => !onCourt(r.id));
+  const ended = remaining() <= 0;
+  let hint = 'Tap a player on the floor or the bench to make a sub.';
+  if (sel) hint = sel.side === 'court' ? `Subbing out ${label(sel.id)}. Tap the bench player coming in.` : `Subbing in ${label(sel.id)}. Tap the player coming out.`;
+
+  const rows = S.roster.slice();
+  if (S.sort === 'min') rows.sort((a,b) => totalOf(b.id,g) - totalOf(a.id,g));
+
+  app.innerHTML = `
+  <div class="bar">
+    <span class="period">${periodLabel(S.period)}</span>
+    <button class="clock num ${S.running?'':'stopped'}" id="clk" data-t="clock" aria-label="Game clock. Tap to set.">${clockStr()}</button>
+    <button class="btn primary ${S.running?'stop':''}" id="ss" ${ended?'disabled':''}>${S.running?'Stop clock':'Start clock'}</button>
+    <div class="adj">
+      <button class="btn small" id="m1" aria-label="Clock minus one second">−1s</button>
+      <button class="btn small" id="p1" aria-label="Clock plus one second">+1s</button>
+    </div>
+    <span class="spacer"></span>
+    <button class="btn ${ended?'flash':''}" id="np">Next period</button>
+    <button class="btn" id="more">Game menu</button>
+  </div>
+
+  <section class="floor" aria-label="On the floor">
+    <div class="floor-head"><span>On the floor</span><span class="num">Stint · total</span></div>
+    <div class="tiles ${sel && sel.side==='bench'?'target':''}">
+      ${S.onCourt.map(id => { const p = P(id); return `
+        <button class="tile ${sel&&sel.id===id?'sel':''}" data-id="${esc(id)}" data-side="court" data-lvl="${esc(id)}">
+          <span class="jn">${esc(p.num || '–')}</span>
+          <span class="nm">${esc(p.name)}</span>
+          <span class="st" data-t="stint" data-id="${esc(id)}">0:00</span>
+          <span class="tot">Total <b data-t="total" data-id="${esc(id)}">0:00</b></span>
+          ${sel&&sel.id===id?'<span class="tag">Coming out</span>':''}
+          <span class="meter" data-t="meter" data-id="${esc(id)}"></span>
+        </button>`; }).join('')}
+    </div>
+  </section>
+
+  <p class="hint ${sel?'on':''}">${esc(hint)}</p>
+
+  <div class="bench ${sel && sel.side==='court'?'target':''}" aria-label="Bench">
+    ${bench.map(r => `
+      <button class="chip ${sel&&sel.id===r.id?'sel':''}" data-id="${esc(r.id)}" data-side="bench">
+        <span class="jn">${esc(r.num || '–')}</span>
+        <span class="nm">${esc(r.name)}</span>
+        <span class="sub" data-t="rest" data-id="${esc(r.id)}"></span>
+      </button>`).join('')}
+  </div>
+
+  <div class="lower">
+    <div class="panel">
+      <h2><span>Minutes</span><button class="btn small" id="sort">${S.sort==='min'?'Sort by roster':'Sort by minutes'}</button></h2>
+      <p class="muted" style="margin:0 0 6px;font-size:.9rem">Tap a player's name to correct their minutes.</p>
+      <div class="scroll"><table>
+        <thead><tr><th>#</th><th>Player</th><th>MIN</th><th>Stint</th><th>Stints</th><th>Longest</th></tr></thead>
+        <tbody>${rows.map(r => `
+          <tr class="${onCourt(r.id)?'oc':''}">
+            <td class="n">${esc(r.num)}</td>
+            <td><button class="namebtn" data-edit="${esc(r.id)}" aria-label="Correct minutes for ${esc(label(r.id))}">${onCourt(r.id)?'<span class="dot" aria-label="On the floor"></span>':''}${esc(r.name)}<span class="pen">Edit</span></button></td>
+            <td class="n big" data-t="total" data-id="${esc(r.id)}"></td>
+            <td class="n" data-t="tstint" data-id="${esc(r.id)}"></td>
+            <td class="n" data-t="stints" data-id="${esc(r.id)}"></td>
+            <td class="n" data-t="longest" data-id="${esc(r.id)}"></td>
+          </tr>`).join('')}</tbody>
+      </table></div>
+      <p class="teamchk" data-t="team"></p>
+    </div>
+    <div class="panel">
+      <h2><span>Sub log</span>${S.log[0]&&S.log[0].kind==='sub'?'<button class="btn small" id="undo">Undo last sub</button>':''}${S.log[0]&&S.log[0].kind==='edit'?'<button class="btn small" id="undo">Undo correction</button>':''}</h2>
+      ${S.log.length ? `<ul class="log">${S.log.map(e => e.kind==='period'
+        ? `<li><span class="when">${shortPeriod(e.period)}</span><span class="muted">Start of ${periodLabel(e.period)}</span></li>`
+        : e.kind==='edit'
+        ? `<li><span class="when">${shortPeriod(e.period)} ${esc(e.clock)}</span><span class="edit">Corrected ${esc(label(e.id))}: ${mmss(e.from)} to ${mmss(e.to)}</span></li>`
+        : `<li><span class="when">${shortPeriod(e.period)} ${esc(e.clock)}</span><span><span class="in">In ${esc(label(e.inn))}</span><br><span class="out">Out ${esc(label(e.out))} after ${mmss(e.outStint)}</span></span></li>`).join('')}</ul>`
+        : '<div class="empty">Subs appear here with the game clock time.</div>'}
+    </div>
+  </div>`;
+
+  document.getElementById('ss').onclick = toggleClock;
+  document.getElementById('m1').onclick = () => adjust(-1);
+  document.getElementById('p1').onclick = () => adjust(1);
+  document.getElementById('np').onclick = () => {
+    if (remaining() > 0) confirmDlg('Start next period?', `There is still ${mmss(remaining(),true)} on the clock in the ${periodLabel(S.period)}.`, 'Start ' + periodLabel(S.period+1), nextPeriod);
+    else nextPeriod();
+  };
+  document.getElementById('clk').onclick = setClockDlg;
+  document.getElementById('more').onclick = menuDlg;
+  document.getElementById('sort').onclick = () => { S.sort = S.sort==='min'?'roster':'min'; save(); render(); };
+  const u = document.getElementById('undo'); if (u) u.onclick = undoLast;
+  app.querySelectorAll('[data-edit]').forEach(b => b.onclick = () => editMinutesDlg(b.dataset.edit));
+  app.querySelectorAll('[data-side]').forEach(b => b.onclick = () => tap(b.dataset.id, b.dataset.side));
+}
+
+function tick(){
+  if (S.phase !== 'game') return;
+  if (S.running && remaining() <= 0){
+    S.base = S.periodStart + plen(S.period); S.running = false; save(); keepAwake(false);
+    render(); toast('End of ' + periodLabel(S.period)); return;
+  }
+  const g = ge();
+  app.querySelectorAll('[data-t]').forEach(el => {
+    const t = el.dataset.t, id = el.dataset.id;
+    if (t === 'clock'){ el.textContent = clockStr(); return; }
+    if (t === 'team'){
+      const sum = S.roster.reduce((a,r) => a + totalOf(r.id,g), 0), want = 5 * g, off = sum - want;
+      const ok = Math.abs(off) < 2;
+      el.classList.toggle('bad', !ok);
+      el.innerHTML = `Team minutes <b>${mmss(sum)}</b> of <b>${mmss(want)}</b>` +
+        (ok ? '. Adds up.' : `. ${off > 0 ? 'Over' : 'Short'} by ${mmss(Math.abs(off))}, check recent corrections.`);
+      return;
+    }
+    const r = rec(id);
+    if (t === 'stint') el.textContent = mmss(curStint(id,g));
+    else if (t === 'total') el.textContent = mmss(totalOf(id,g));
+    else if (t === 'tstint') el.textContent = onCourt(id) ? mmss(curStint(id,g)) : '';
+    else if (t === 'stints') el.textContent = r.stints + (onCourt(id) ? 1 : 0);
+    else if (t === 'longest') el.textContent = mmss(Math.max(r.longest, curStint(id,g)));
+    else if (t === 'meter') el.style.width = Math.min(100, curStint(id,g) / S.long * 100) + '%';
+    else if (t === 'rest'){
+      const tot = totalOf(id,g);
+      el.innerHTML = r.lastOut == null ? 'Not in yet' : `Rest <b>${mmss(g - r.lastOut)}</b> · Min <b>${mmss(tot)}</b>`;
+    }
+  });
+  app.querySelectorAll('.tile').forEach(el => {
+    const s = curStint(el.dataset.id, g);
+    el.classList.toggle('long', s >= S.long);
+    el.classList.toggle('warn', s >= S.warn && s < S.long);
+  });
+}
+setInterval(tick, 100);
+
+/* ---------- dialogs ---------- */
+const dlg = document.getElementById('dlg');
+function openDlg(html, bind){ dlg.innerHTML = html; bind && bind(); if (!dlg.open) dlg.showModal(); }
+function closeDlg(){ if (dlg.open) dlg.close(); }
+dlg.addEventListener('click', e => { if (e.target === dlg) closeDlg(); });
+
+function confirmDlg(title, body, ok, fn){
+  openDlg(`<h3>${esc(title)}</h3><p>${esc(body)}</p><div class="acts"><button class="btn" id="c0">Cancel</button><button class="btn primary" id="c1">${esc(ok)}</button></div>`, () => {
+    document.getElementById('c0').onclick = closeDlg;
+    document.getElementById('c1').onclick = () => { closeDlg(); fn(); };
+  });
+}
+
+function setClockDlg(){
+  openDlg(`<h3>Set game clock</h3><p class="muted">Match the scoreboard. Players on the floor gain or lose the same time. ${S.running ? 'The clock keeps running.' : ''}</p>
+    <input id="ci" class="clockin" type="text" inputmode="decimal" value="${mmss(remaining(),true)}" aria-label="Clock as minutes and seconds">
+    <div class="acts"><button class="btn" id="c0">Cancel</button><button class="btn primary" id="c1">Set clock</button></div>`, () => {
+    const ci = document.getElementById('ci'); ci.select();
+    const apply = () => {
+      const v = ci.value.trim(); let sec;
+      const m = v.match(/^(\d{1,2}):(\d{1,2}(?:\.\d)?)$/);
+      if (m) sec = +m[1]*60 + +m[2]; else if (/^\d+(\.\d)?$/.test(v)) sec = +v; else { ci.setCustomValidity('Use m:ss, like 12:34'); ci.reportValidity(); return; }
+      sec = Math.min(plen(S.period), Math.max(0, sec));
+      setElapsed(S.periodStart + plen(S.period) - sec); closeDlg(); toast('Clock set to ' + mmss(sec,true));
+    };
+    ci.oninput = () => ci.setCustomValidity('');
+    ci.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); apply(); } };
+    document.getElementById('c0').onclick = closeDlg;
+    document.getElementById('c1').onclick = apply;
+  });
+}
+
+function editMinutesDlg(id){
+  const g = ge(), oc = onCourt(id);
+  openDlg(`<h3>Correct minutes</h3>
+    <p style="margin:0 0 12px"><b>${esc(label(id))}</b> <span class="muted">${oc ? 'is on the floor' : 'is on the bench'}</span></p>
+    <div class="row">
+      <div><label class="f" for="et">Total minutes</label>
+        <input id="et" class="clockin" type="text" inputmode="decimal" value="${mmss(totalOf(id,g))}"></div>
+      ${oc ? `<div><label class="f" for="es">Current stint</label>
+        <input id="es" class="clockin" type="text" inputmode="decimal" value="${mmss(curStint(id,g))}"></div>` : ''}
+    </div>
+    <p class="muted" style="font-size:.9rem;margin:10px 0 0">Type m:ss, like 14:20. ${oc ? 'The stint keeps counting from what you enter if the clock is running.' : ''}</p>
+    <p id="err" style="color:var(--red);font-weight:600;margin:8px 0 0;min-height:1.2em"></p>
+    <div class="acts"><button class="btn" id="c0">Cancel</button><button class="btn primary" id="c1">Save minutes</button></div>`, () => {
+    const et = document.getElementById('et'), es = document.getElementById('es'), err = document.getElementById('err');
+    et.select();
+    const apply = () => {
+      const tot = parseClock(et.value);
+      const st = oc ? parseClock(es.value) : 0;
+      if (tot == null){ err.textContent = 'Total needs to be in m:ss, like 14:20.'; et.focus(); return; }
+      if (oc && st == null){ err.textContent = 'Stint needs to be in m:ss, like 3:45.'; es.focus(); return; }
+      if (oc && st > tot){ err.textContent = 'The current stint can’t be longer than total minutes.'; es.focus(); return; }
+      if (tot > ge() + 1){ err.textContent = 'That’s more than the ' + mmss(ge()) + ' of game time played so far.'; et.focus(); return; }
+      closeDlg(); applyCorrection(id, tot, st);
+    };
+    [et, es].forEach(i => i && (i.onkeydown = e => { if (e.key === 'Enter'){ e.preventDefault(); apply(); } }));
+    document.getElementById('c0').onclick = closeDlg;
+    document.getElementById('c1').onclick = apply;
+  });
+}
+
+function menuDlg(){
+  openDlg(`<h3>Game menu</h3><div class="menu">
+      <button class="btn" id="mc">Copy minutes as text</button>
+      <button class="btn" id="ma">Add a player</button>
+      <button class="btn" id="mn">New game</button>
+    </div><div class="acts"><button class="btn" id="c0">Close</button></div>`, () => {
+    document.getElementById('c0').onclick = closeDlg;
+    document.getElementById('mc').onclick = () => { closeDlg(); copyMinutes(); };
+    document.getElementById('ma').onclick = addPlayerDlg;
+    document.getElementById('mn').onclick = () => confirmDlg('Start a new game?', 'This clears the clock, minutes and sub log. Your roster stays.', 'Start new game', () => {
+      keepAwake(false);
+      const keep = {rosterText:S.rosterText, format:S.format, warn:S.warn, long:S.long, starters:S.onCourt.slice()};
+      S = Object.assign(fresh(), keep); sel = null; save(); render();
+    });
+  });
+}
+
+function addPlayerDlg(){
+  openDlg(`<h3>Add a player</h3><div class="row">
+      <div style="max-width:90px"><label class="f" for="an">Number</label><input id="an" type="text" inputmode="numeric" maxlength="2"></div>
+      <div><label class="f" for="am">Name</label><input id="am" type="text"></div></div>
+    <div class="acts"><button class="btn" id="c0">Cancel</button><button class="btn primary" id="c1">Add player</button></div>`, () => {
+    document.getElementById('an').focus();
+    document.getElementById('c0').onclick = closeDlg;
+    document.getElementById('c1').onclick = () => {
+      const num = document.getElementById('an').value.trim(), name = document.getElementById('am').value.trim();
+      if (!name){ document.getElementById('am').focus(); return; }
+      const id = (num + '|' + name).toLowerCase().replace(/\s+/g,' ');
+      if (!S.roster.some(r => r.id === id)){ S.roster.push({id, num, name}); rec(id); S.rosterText += (S.rosterText.endsWith('\n')||!S.rosterText?'':'\n') + (num?num+' ':'') + name; }
+      save(); closeDlg(); render(); toast('Added ' + label(id));
+    };
+  });
+}
+
+function copyMinutes(){
+  const g = ge();
+  const lines = [`Minutes through ${periodLabel(S.period)} ${mmss(remaining(),true)}`, '', '#   Player                 MIN    Stints'];
+  S.roster.slice().sort((a,b) => totalOf(b.id,g) - totalOf(a.id,g)).forEach(r => {
+    lines.push(String(r.num).padEnd(4) + r.name.slice(0,22).padEnd(23) + mmss(totalOf(r.id,g)).padStart(5) + '   ' + (rec(r.id).stints + (onCourt(r.id)?1:0)));
+  });
+  const text = lines.join('\n');
+  const fallback = () => openDlg(`<h3>Minutes</h3><p class="muted">Select all and copy.</p><textarea id="ct" style="min-height:260px;font-family:ui-monospace,Menlo,Consolas,monospace">${esc(text)}</textarea><div class="acts"><button class="btn" id="c0">Close</button></div>`, () => {
+    document.getElementById('c0').onclick = closeDlg; const t = document.getElementById('ct'); t.focus(); t.select();
+  });
+  try{ navigator.clipboard.writeText(text).then(() => toast('Minutes copied'), fallback); }catch(e){ fallback(); }
+}
+
+let toastTimer;
+function toast(msg){ const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1800); }
+
+document.addEventListener('keydown', e => {
+  if (S.phase !== 'game' || dlg.open) return;
+  const tag = (e.target.tagName || '').toLowerCase();
+  if (tag === 'input' || tag === 'textarea' || tag === 'select') return;
+  if (e.code === 'Space'){ e.preventDefault(); toggleClock(); }
+  if (e.key === 'Escape' && sel){ sel = null; render(); }
+});
+
+if (S.running) keepAwake(true);
+render();
+
+// Offline support: cache the app on first launch so it opens with no internet
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
+// If this app is ever open twice, keep both copies in sync instead of overwriting
+window.addEventListener('storage', e => {
+  if (e.key === KEY && e.newValue){ try{ S = Object.assign(fresh(), JSON.parse(e.newValue)); sel = null; render(); }catch(err){} }
+});
+})();
+</script>
+</body>
+</html>
